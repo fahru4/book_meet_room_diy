@@ -1,0 +1,54 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["book_meet_room_diy"]
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(100)
+  email        String    @unique @db.VarChar(150)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         String    @default("USER") @db.VarChar(20)
+
+  bookings     Booking[]
+
+  @@map("users")
+  @@schema("book_meet_room_diy")
+}
+
+model Room {
+  id       Int       @id @default(autoincrement())
+  name     String    @db.VarChar(100)
+  capacity Int
+  isActive Boolean   @default(true) @map("is_active")
+
+  bookings Booking[]
+
+  @@map("rooms")
+  @@schema("book_meet_room_diy")
+}
+
+model Booking {
+  id        Int      @id @default(autoincrement())
+  roomId    Int      @map("room_id")
+  userId    Int      @map("user_id")
+  title     String   @db.VarChar(150)
+  startTime DateTime @map("start_time") @db.Timestamptz(3)
+  endTime   DateTime @map("end_time") @db.Timestamptz(3)
+  status    String   @default("CONFIRMED") @db.VarChar(20)
+
+  room Room @relation(fields: [roomId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([roomId, status, startTime, endTime])
+  @@index([userId])
+  @@map("bookings")
+  @@schema("book_meet_room_diy")
+}
